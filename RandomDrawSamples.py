@@ -39,7 +39,7 @@ def IsSubString(SubStrList,Str):
     return flag
 
 #get the file name in selected directory
-def CopyFileList(SrcPath, TarPath, FlagStr=[], Ratio = 1.0):
+def CopyNegtiveSamples(FlagStr=[], Ratio = 1.0):
     
     FileList=[]
     
@@ -47,22 +47,31 @@ def CopyFileList(SrcPath, TarPath, FlagStr=[], Ratio = 1.0):
     #print(RND)
 
     count = 0     
-    FileNames=os.listdir(SrcPath)
+    FileNames=os.listdir(FLAGS.pre_negtive)
+
+    all_the_text = ''
     if (len(FileNames)>0):
         for fn in FileNames:
             if (len(FlagStr)>0):
                 if (IsSubString(FlagStr,fn)):
                     if(Ratio > 0.99 and Ratio < 1.5):
-                        shutil.copy(SrcPath + fn,TarPath + fn)
+                        shutil.copy(FLAGS.pre_negtive + fn, FLAGS.post_negtive + fn)
+                        all_the_text = all_the_text + FLAGS.post_negtive + fn + ' 0' + '\n'
+
                     elif(count % int(Ratio) == RND):
-                        shutil.copy(SrcPath + fn,TarPath + fn)
+                        shutil.copy(FLAGS.pre_negtive + fn, FLAGS.post_negtive + fn)
+                        all_the_text = all_the_text + FLAGS.post_negtive + fn + ' 0' + '\n'
+
                     FileList.append(fn)
         
                 else:
                     if(Ratio > 0.99 and Ratio < 1.5):
-                        shutil.copy(SrcPath + fn,TarPath + fn)
+                        shutil.copy(FLAGS.pre_negtive + fn, FLAGS.post_negtive + fn)
+                        all_the_text = all_the_text + FLAGS.post_negtive + fn + ' 0' + '\n'
+
                     elif(count % int(Ratio) == RND):
-                        shutil.copy(SrcPath + fn,TarPath + fn)
+                        shutil.copy(FLAGS.pre_negtive + fn,FLAGS.post_negtive + fn)
+                        all_the_text = all_the_text + FLAGS.post_negtive + fn + ' 0' + '\n'
 
                     FileList.append(fn)
                     
@@ -72,16 +81,51 @@ def CopyFileList(SrcPath, TarPath, FlagStr=[], Ratio = 1.0):
     if (len(FileList)>0):
         FileList.sort()
     
-    return FileList
+    return all_the_text
+
+def CopyPostiveSamples(FlagStr=[]):
+    
+    FileList=[]
+    
+    FileNames=os.listdir(FLAGS.pre_postive)
+
+    all_the_text = ''
+    if (len(FileNames)>0):
+        for fn in FileNames:
+            if (len(FlagStr)>0):
+                if (IsSubString(FlagStr,fn)):
+                    
+                    shutil.copy(FLAGS.pre_postive + fn, FLAGS.post_postive + fn)
+                    all_the_text = all_the_text + FLAGS.post_postive + fn + ' 1' + '\n'
+
+                    FileList.append(fn)
+        
+                else:
+                    shutil.copy(FLAGS.pre_postive + fn, FLAGS.post_postive + fn)
+                    all_the_text = all_the_text + FLAGS.post_postive + fn + ' 1' + '\n'
+
+                    FileList.append(fn)
+     
+    if (len(FileList)>0):
+        FileList.sort()
+    
+    return all_the_text
 
 PostiveNum = filenumber(FLAGS.pre_postive)
 NegtiveNum = filenumber(FLAGS.pre_negtive)
 
 #copy all postive samples to post sample sets
-CopyFileList(FLAGS.pre_postive, FLAGS.post_postive, 'jpg')
+all_the_text = CopyPostiveSamples('jpg')
 
 #draw negtive samples according to ratio between negtive & postive samples
+ratio = 1.0
 if (PostiveNum > 0):
     ratio = 1.0 * NegtiveNum / PostiveNum
-    CopyFileList(FLAGS.pre_negtive, FLAGS.post_negtive, 'jpg', ratio)
+
+all_the_text = all_the_text + CopyNegtiveSamples('jpg',ratio)
+
+#write filename & IOU type;
+file_object = open(FLAGS.save_path + 'filelist.txt', 'w+')
+file_object.write(all_the_text)
+file_object.close( )
     
